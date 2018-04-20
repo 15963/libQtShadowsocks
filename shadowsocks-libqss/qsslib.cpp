@@ -7,6 +7,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QDateTime>
+#include "error.h"
 
 
 using namespace QSS;
@@ -63,12 +64,12 @@ int Qsslib::init(char* config) {
 
 int Qsslib::start(unsigned short port){
     //prefix with start queue R_: start,P_: pending, T_: stop;
-   if (m_connected)
+   if (m_status == SUCCEED)
        return SUCCEED; 
    else {
         std::string startMark="R_"+get_current_datetime(); 
         queue_start.push_back(startMark); 
-        m_connected = PENDING; 
+        m_status = PENDING; 
    }
        
    //TODO: start thread 
@@ -81,7 +82,11 @@ int Qsslib::stop() {
 }
 
 int Qsslib::get_status(char* res) {
-    return connected; 
+    if (m_status == SUCCEED) {
+      res = (char*) m_current_server; 
+    }
+
+    return m_status; 
 }
 
 int Qsslib::unint() {
@@ -89,15 +94,15 @@ int Qsslib::unint() {
     return SUCCEED; 
 }
 
-Qsslib* Qsslib::getInstance() {
-    if (instance == NULL) {
+Qsslib* Qsslib::get_instance() {
+    if (m_instance == NULL) {
          //TODO : lock();
-       if (instance == NULL) {
-            instance = new Qsslib(); 
+       if (m_instance == NULL) {
+            m_instance = new Qsslib(); 
        }
        //TODO : unlock();
 
     }
-    return instance; 
+    return m_instance; 
 }
 

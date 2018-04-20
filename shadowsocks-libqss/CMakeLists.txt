@@ -1,11 +1,11 @@
 set(TASK "shadowsocks-libqss")
 set(SLIB "shadowsocks-lib")
 
-set(APPSOURCE
+set(APP_SOURCE
    main.cpp
    ) 
 
-set(LIBSOURCE
+set(LIB_SOURCE
    qsslib.cpp
    )    
 
@@ -14,8 +14,8 @@ set(SOURCE
     utils.cpp
     )
 
-add_executable(${TASK} ${SOURCE} ${APPSOURCE})
-add_library(${SLIB} STATIC ${SOURCE} ${LIBSOURCE})
+add_executable(${TASK} ${SOURCE} ${APP_SOURCE})
+add_library(${SLIB} STATIC ${SOURCE} ${LIB_SOURCE})
 
 target_link_libraries(${TASK} Qt5::Core Qt5::Network QtShadowsocks)
 target_include_directories(${TASK}

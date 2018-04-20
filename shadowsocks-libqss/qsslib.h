@@ -4,30 +4,25 @@
 #include <iostream>
 #include <vector> 
 
-#define SUCCEED  0 
-#define FAILED  -1
-#define PENDING -2
-#define CONFIG_PARSE_ERROR -3; 
-
-struct shadowserver {
+typedef struct shadow_server_tag {
      std::string ip; 
      std::string pwd; 
-     short port; 
-};
+     unsigned short port; 
+} shadow_server, *pshadow_server;
 
-struct shadowconfig {
-    std::vector<shadowserver> server; 
+typedef struct shadow_config_tag {
+    std::vector<shadow_server> server; 
     std::string local_address; 
-    short local_port; 
+    unsigned short local_port; 
     int time_out; 
     std::string method; 
     int http_proxy; 
     int auth; 
-};
+} shadow_config, *pshadow_config;
 
 class Qsslib {
 public:
-    static Qsslib* getInstance(); 
+    static Qsslib* get_instance(); 
      int init(char* config);
      int start(unsigned short port); 
      int stop(); 
@@ -39,16 +34,13 @@ private:
 	Qsslib& operator=(const Qsslib&);
     std::string get_current_datetime(); 
     int parse_config(char* config);
-
-    std::vector<std::string> m_queuestart; 
-    std::vector<std::string> m_queuestop;
-    std::string m_status;
-    int m_connected; 
+    shadow_server m_current_server ;
+    int m_status; 
     int m_errorno; 
-    std::string m_errormsg; 
-    shadowconfig m_config; 
+    std::string m_error_msg; 
+    shadow_config m_config; 
 
-	static Qsslib* instance;
+	static Qsslib* m_instance;
 };  
 
 #endif /*INCLUDE_QSSLIB_H*/
