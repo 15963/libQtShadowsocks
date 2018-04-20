@@ -44,6 +44,7 @@ public:
     void setHttpMode(bool http);
     const std::string& getMethod() const;
     bool start(bool serverMode = false);
+    void stop(); 
 
 private:
     std::unique_ptr<QSS::Controller> controller;

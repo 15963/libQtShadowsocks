@@ -167,3 +167,7 @@ const std::string& Client::getMethod() const
 {
     return profile.method();
 }
+
+void Client::stop() {
+    controller->stop(); 
+}
