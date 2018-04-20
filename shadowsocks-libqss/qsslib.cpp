@@ -58,7 +58,7 @@ int Qsslib::parse_config(char* config) {
                                  svr_pwd = svr_pwd_value.toString(); 
                              }
                         }
-                        shadow_server svr_base_tag;
+                        SERVER svr_base_tag;
                         std::string server_ip(svr_ip.toUtf8().constData()); 
                         svr_base_tag.ip=(server_ip); 
                         std::string server_port(svr_port.toUtf8().constData()); 
@@ -130,7 +130,7 @@ void Qsslib::shadow_connect_thread(void *pdata) {
   int  try_connect_count = 0; 
   Qsslib *pself = (Qsslib *)pdata; 
   boost::mutex::scoped_lock lock(pself->get_thread_lock()); 
-  shadow_config ssconfig = pself->get_shadow_config();    
+  CONFIG ssconfig = pself->get_shadow_config();    
   if (ssconfig.http_proxy) {
     used_http_proxy = true; 
   }
@@ -140,7 +140,7 @@ void Qsslib::shadow_connect_thread(void *pdata) {
     if( ncount > 0 && (pself->get_server_status())== FAILED ) {
       try_connect_count = ncount; 
       for (int i = 0; i < ncount; i++) {
-            shadow_server srv = ssconfig.server[i]; 
+            SERVER srv = ssconfig.server[i]; 
             pself->get_shadows_client().setup(QString::fromLocal8Bit(srv.ip.c_str()),
                 QString::fromLocal8Bit(srv.port.c_str()),
                 QString::fromLocal8Bit(ssconfig.local_address.c_str()),
@@ -175,7 +175,6 @@ int Qsslib::start(unsigned short port){
    } 
    m_thread_run = 1;     
    boost::thread thr(boost::bind(&Qsslib::shadow_connect_thread,this));
-   //boost::thread thr(&Qsslib::shadow_connect_thread,this); 
    thr.join(); 
    return PENDING; 
 }
@@ -213,13 +212,13 @@ int Qsslib::get_thread_isrun() {
     return m_thread_run; 
  }
      
-void Qsslib::set_current_server(shadow_server srv) {
+void Qsslib::set_current_server(SERVER srv) {
    m_current_server.ip = srv.ip; 
    m_current_server.pwd = srv.pwd; 
    m_current_server.port = srv.port; 
 }
      
-shadow_config Qsslib::get_shadow_config() {
+CONFIG Qsslib::get_shadow_config() {
     return m_config; 
 } 
 
