@@ -8,6 +8,7 @@
 #include <QJsonValue>
 #include <QDateTime>
 #include <boost/bind.hpp>
+#include <QCoreApplication>
 
 using namespace QSS;
 using namespace std; 
@@ -46,18 +47,25 @@ int Qsslib::parse_config(char* config) {
                                  svr_ip = svr_ip_value.toString(); 
                              }
                         }
+                        
                         if (item_obj.contains("port")) {
                              QJsonValue svr_port_value = item_obj.value("port");
-                             if (svr_port_value.isString()) {
-                                 svr_port = svr_port_value.toString(); 
+                             if (svr_port_value.isDouble()) {
+                                  int portnum = svr_port_value.toDouble(); 
+                                  stringstream ss; 
+                                  ss << portnum; 
+                                  std::string str_port = ss.str(); 
+                                  svr_port = QString::fromLocal8Bit(str_port.c_str());
                              }
                         }
+
                         if (item_obj.contains("password")) {
                              QJsonValue svr_pwd_value = item_obj.value("password");
                              if (svr_pwd_value.isString()) {
                                  svr_pwd = svr_pwd_value.toString(); 
                              }
                         }
+                        
                         SERVER svr_base_tag;
                         std::string server_ip(svr_ip.toUtf8().constData()); 
                         svr_base_tag.ip=(server_ip); 
@@ -70,21 +78,29 @@ int Qsslib::parse_config(char* config) {
                }                           
            }
            if (object.contains("local_address")) {
-               QJsonValue lo_addr_value = object.value("server");  
+               QJsonValue lo_addr_value = object.value("local_address");  
                if (lo_addr_value.isString()) {
                    m_config.local_address = lo_addr_value.toString().toUtf8().constData(); 
                }
            }
            if (object.contains("local_port")) {
                QJsonValue lo_port_value = object.value("local_port");  
-               if (lo_port_value.isString()) {
-                   m_config.local_port = lo_port_value.toString().toUtf8().constData(); 
+               if (lo_port_value.isDouble()) {
+                   int local_port_num =  lo_port_value.toDouble();
+                    stringstream ss; 
+                    ss << local_port_num; 
+                    std::string str_local_port = ss.str(); 
+                    printf("json local port :%s\n",str_local_port.c_str());               
+                    m_config.local_port = str_local_port; 
                }
            }
            if (object.contains("timeout")) {
                QJsonValue lo_timeout_value = object.value("timeout");  
-               if (lo_timeout_value.isString()) {
-                   m_config.time_out = lo_timeout_value.toString().toUtf8().constData(); 
+               if (lo_timeout_value.isDouble()) {
+                   int time_out_num = lo_timeout_value.toDouble(); 
+                   stringstream ss; 
+                   ss << time_out_num;
+                   m_config.time_out = ss.str(); 
                }
            }
            if (object.contains("method")) {
@@ -134,13 +150,22 @@ void Qsslib::shadow_connect_thread(void *pdata) {
   if (ssconfig.http_proxy) {
     used_http_proxy = true; 
   }
-  pself->set_server_status(PENDING);    
   while(pself->get_thread_isrun()) {
   int ncount = ssconfig.server.size(); 
     if( ncount > 0 && (pself->get_server_status())== FAILED ) {
+      pself->set_server_status(PENDING); 
       try_connect_count = ncount; 
       for (int i = 0; i < ncount; i++) {
             SERVER srv = ssconfig.server[i]; 
+            printf("ip:%s, port:%s, pwd:%s,local_address:%s, local_port:%s,method:%s, timeout:%s\n",
+                srv.ip.c_str(),
+                srv.port.c_str(),
+                srv.pwd.c_str(),
+                ssconfig.local_address.c_str(),
+                ssconfig.local_port.c_str(),
+                ssconfig.method.c_str(),
+                ssconfig.time_out.c_str()
+            );
             pself->get_shadows_client().setup(QString::fromLocal8Bit(srv.ip.c_str()),
                 QString::fromLocal8Bit(srv.port.c_str()),
                 QString::fromLocal8Bit(ssconfig.local_address.c_str()),
@@ -153,28 +178,35 @@ void Qsslib::shadow_connect_thread(void *pdata) {
             if (used_http_proxy)
                 pself->get_shadows_client().setHttpMode(true);   
             if ( pself->get_shadows_client().start(false)) {
-                pself->set_server_status(SUCCEED);    
+                pself->set_server_status(SUCCEED);  
                 break;  
             } else {
                 try_connect_count --; 
+
             }
         }
         if (try_connect_count == 0) {
             pself->set_server_status(FAILED);    
         }
-    }    
+    }   
+  
     BOOST_THREAD_SLEEP(1000);
+    QCoreApplication::processEvents();
    }
 }
 
 int Qsslib::start(unsigned short port){   
+    int argc = 2; 
+    char ** argv = NULL;
+    QCoreApplication a(argc,argv);
    if (m_status == SUCCEED)
        return SUCCEED; 
    else if (m_status == PENDING) {
        return PENDING; 
    } 
-   m_thread_run = 1;     
+   m_thread_run = 1;   
    boost::thread thr(boost::bind(&Qsslib::shadow_connect_thread,this));
+   a.exec(); 
    thr.join(); 
    return PENDING; 
 }

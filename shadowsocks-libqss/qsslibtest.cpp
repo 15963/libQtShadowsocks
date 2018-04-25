@@ -11,6 +11,7 @@ void test_gsslib_init_json_right(std::string str) {
      p[str.size()] = '\0'; 
      int ret = Qsslib::get_instance()->init(p); 
      assert(ret == 0); 
+     printf("ret:%d,parser succeed!\n",ret); 
      delete[] p; 
 }
 
@@ -21,26 +22,31 @@ void test_gsslib_init_json_mistake(std::string str) {
      p[str.size()] = '\0'; 
      int ret = Qsslib::get_instance()->init(p); 
      assert(ret == -3); 
+     printf("ret:%d,parser failed!\n",ret);
      delete[] p; 
 
 }
 
 void test_gsslib_start() {
-     Qsslib::get_instance()->start(18081); 
+    printf("gsslib start!\n"); 
+    int ret = Qsslib::get_instance()->start(18081); 
+    printf("start ret:%d\n",ret); 
 }
 
 void test_gsslib_stop() {
-    Qsslib::get_instance()->stop(); 
+   int ret = Qsslib::get_instance()->stop(); 
+   printf("stop ret:%d\n",ret); 
 }
 
 void test_gsslib_get_status() {
    char buff[256]={0};
+   printf("gss get status\n"); 
    Qsslib::get_instance()->get_status(buff); 
-   std::cout<< buff <<std::endl;
+   std::cout<<"current server:" << buff <<std::endl;
 }
 
 void test_gsslib_uninit() {
-   Qsslib::get_instance()->uninit(); 
+  int ret = Qsslib::get_instance()->uninit(); 
 }
 
 int main(int argc, char** argv ) {
@@ -49,9 +55,13 @@ int main(int argc, char** argv ) {
    
     test_gsslib_init_json_right(config_format_data); 
     test_gsslib_init_json_mistake(config_format_data); 
+    test_gsslib_start(); 
+    test_gsslib_get_status();
+    //test_gsslib_stop(); 
+    //test_gsslib_get_status(); 
+    //test_gsslib_uninit();
 
     
-    system("pause");
     return 0; 
 
 }

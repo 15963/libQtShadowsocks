@@ -26,6 +26,7 @@
 #include <QJsonObject>
 #include <QDebug>
 #include "client.h"
+#include <QEventLoop>
 
 Client::Client() :
     autoBan(false)
@@ -43,7 +44,6 @@ bool Client::readConfig(const QString &file)
                 << "Configuration file" << file << "is not readable!";
         return false;
     }    
-
     QJsonParseError error;
     QJsonDocument confJson = QJsonDocument::fromJson(c.readAll(), &error);
     c.close();
@@ -52,7 +52,6 @@ bool Client::readConfig(const QString &file)
         qCritical() << "Failed to parse configuration file:" << error.errorString();
         return false;
     }
-
     profile.setLocalAddress(confObj["local_address"].toString().toStdString());
     profile.setLocalPort(confObj["local_port"].toInt());
     profile.setMethod(confObj["method"].toString().toStdString());
@@ -64,7 +63,6 @@ bool Client::readConfig(const QString &file)
     if (confObj["auth"].toBool()) {
         QDebug(QtMsgType::QtCriticalMsg) << "OTA is deprecated, please remove OTA from the configuration file.";
     }
-
     return true;
 }
 
@@ -105,14 +103,11 @@ bool Client::start(bool _server)
             return false;
         }
     }
-
     if (!profile.isValid()) {
         qCritical() << "The profile is invalid. Improper setup?";
         return false;
     }
-
     controller.reset(new QSS::Controller(profile, !_server, autoBan));
-
     if (!_server) {
         QSS::Address server(profile.serverAddress(), profile.serverPort());
         server.blockingLookUp();
@@ -126,16 +121,17 @@ bool Client::start(bool _server)
                         << "Destination is not reachable. "
                            "Please check your network and firewall settings. "
                            "And make sure the profile is correct.";
+                return false; 
             }
         });
         QObject::connect(tester.get(), &QSS::AddressTester::testErrorString,
                 [] (const QString& error) {
             QDebug(QtMsgType::QtWarningMsg).noquote() << "Connectivity testing error:" << error;
+            return false; 
         });
         tester->startConnectivityTest(profile.method(),
                                       profile.password());
     }
-
     return controller->start();
 }
 
